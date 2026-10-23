@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b6b53">
+  <title>Explore From Noakhali (EFN)</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="EFN home">
+      <div class="brand-mark">EFN</div>
+      <div><strong>Explore From Noakhali</strong><small data-i18n="tagline">পথের নেশায়, প্রকৃতির মায়ায়</small></div>
+    </a>
+    <div class="header-actions">
+      <select id="language-select" aria-label="Language">
+        <option value="bn">বাংলা</option><option value="en">English</option>
+      </select>
+      <button id="admin-open" class="button button-outline" data-i18n="adminLogin">Admin Login</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow" data-i18n="heroEyebrow">ভ্রমণ হোক স্মরণীয়</p>
+      <h1 data-i18n="heroTitle">নতুন জায়গা, নতুন গল্প—EFN-এর সাথে</h1>
+      <p data-i18n="heroText">আপনার পছন্দের ট্যুর বেছে নিন, অনলাইনে বুকিং দিন, আর বিকাশ পেমেন্টের তথ্য জমা দিন।</p>
+      <a class="button button-primary" href="#tours" data-i18n="seeTours">ট্যুর দেখুন</a>
+    </section>
+
+    <section id="tours" class="section">
+      <div class="section-heading">
+        <div><p class="eyebrow" data-i18n="upcoming">UPCOMING TOURS</p><h2 data-i18n="toursTitle">আসন্ন ট্যুর</h2></div>
+        <p id="tour-count" class="muted"></p>
+      </div>
+      <div id="tour-list" class="tour-grid"><div class="loading" data-i18n="loading">লোড হচ্ছে…</div></div>
+    </section>
+
+    <section class="how section">
+      <h2 data-i18n="howTitle">বুকিং করার নিয়ম</h2>
+      <div class="steps">
+        <article><span>01</span><h3 data-i18n="step1Title">ট্যুর নির্বাচন</h3><p data-i18n="step1Text">পছন্দের ট্যুর ও যাত্রীর সংখ্যা বেছে নিন।</p></article>
+        <article><span>02</span><h3 data-i18n="step2Title">তথ্য জমা দিন</h3><p data-i18n="step2Text">আপনার নাম, ফোন নম্বর ও পেমেন্টের তথ্য দিন।</p></article>
+        <article><span>03</span><h3 data-i18n="step3Title">EFN-এর নিশ্চিতকরণ</h3><p data-i18n="step3Text">অ্যাডমিন পেমেন্ট যাচাই করে বুকিং নিশ্চিত করবে।</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer><strong>Explore From Noakhali (EFN)</strong><p data-i18n="footerText">ভ্রমণ করুন দায়িত্বশীলভাবে। বুকিং নিশ্চিত হওয়ার আগে EFN-এর অনুমোদন অপেক্ষা করুন।</p></footer>
+
+  <dialog id="booking-dialog" class="modal">
+    <form id="booking-form" class="modal-content">
+      <button type="button" class="close" data-close="booking-dialog" aria-label="Close">×</button>
+      <p class="eyebrow" data-i18n="bookingEyebrow">BOOK YOUR TOUR</p>
+      <h2 id="booking-title">ট্যুর বুকিং</h2>
+      <input type="hidden" id="booking-tour-id">
+      <label for="guest-name" data-i18n="fullName">পূর্ণ নাম</label>
+      <input id="guest-name" name="guest_name" required maxlength="100" autocomplete="name">
+      <label for="guest-phone" data-i18n="phone">মোবাইল নম্বর</label>
+      <input id="guest-phone" name="guest_phone" required maxlength="20" inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX">
+      <label for="guest-count" data-i18n="guestCount">যাত্রীর সংখ্যা</label>
+      <input id="guest-count" name="guest_count" type="number" min="1" max="20" value="1" required>
+      <div class="payment-box">
+        <h3 data-i18n="manualPayment">ম্যানুয়াল বিকাশ পেমেন্ট</h3>
+        <p><span data-i18n="sendTo">এই নম্বরে টাকা পাঠান:</span> <strong id="bkash-number">আপনার বিকাশ নম্বর সেট করুন</strong></p>
+        <p class="muted" data-i18n="paymentWarning">টাকা পাঠানোর আগে ট্যুরের ফি ও পেমেন্টের নিয়ম অ্যাডমিনের কাছ থেকে নিশ্চিত করুন।</p>
+      </div>
+      <label for="trx-id" data-i18n="trxId">বিকাশ TrxID (টাকা পাঠালে)</label>
+      <input id="trx-id" name="trx_id" maxlength="80" placeholder="TrxID">
+      <label for="booking-note" data-i18n="note">অতিরিক্ত তথ্য (ঐচ্ছিক)</label>
+      <textarea id="booking-note" name="note" rows="3" maxlength="500"></textarea>
+      <button class="button button-primary full-width" type="submit" data-i18n="submitBooking">বুকিং জমা দিন</button>
+      <p id="booking-message" class="form-message" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog id="admin-dialog" class="modal modal-wide">
+    <div class="modal-content">
+      <button type="button" class="close" data-close="admin-dialog" aria-label="Close">×</button>
+      <div id="admin-login-view">
+        <p class="eyebrow">EFN ADMIN</p><h2 data-i18n="adminLogin">Admin Login</h2>
+        <form id="admin-login-form">
+          <label for="admin-email" data-i18n="email">ইমেইল</label><input id="admin-email" type="email" autocomplete="username" required>
+          <label for="admin-password" data-i18n="password">পাসওয়ার্ড</label><input id="admin-password" type="password" autocomplete="current-password" required>
+          <button class="button button-primary full-width" type="submit" data-i18n="login">লগইন</button>
+          <p id="login-message" class="form-message" role="status"></p>
+        </form>
+      </div>
+      <div id="admin-dashboard" hidden>
+        <div class="dashboard-heading"><div><p class="eyebrow">EFN ADMIN</p><h2 data-i18n="bookingManagement">বুকিং ম্যানেজমেন্ট</h2></div><button id="admin-logout" class="button button-outline" data-i18n="logout">লগআউট</button></div>
+        <div class="admin-tabs">
+          <button class="tab active" data-tab="bookings" data-i18n="bookings">বুকিং</button>
+          <button class="tab" data-tab="tours" data-i18n="manageTours">ট্যুর ম্যানেজ</button>
+        </div>
+        <div id="admin-alert" class="form-message" role="status"></div>
+        <section id="admin-bookings-panel">
+          <div class="filter-row"><label for="status-filter" data-i18n="filterStatus">স্ট্যাটাস</label><select id="status-filter"><option value="all">সব</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="rejected">Rejected</option></select><button id="refresh-bookings" class="button button-outline" data-i18n="refresh">রিফ্রেশ</button></div>
+          <div id="booking-table" class="admin-list"></div>
+        </section>
+        <section id="admin-tours-panel" hidden>
+          <form id="tour-form" class="tour-admin-form">
+            <h3 data-i18n="addEditTour">ট্যুর যোগ / সম্পাদনা</h3>
+            <input type="hidden" id="edit-tour-id">
+            <label for="tour-title-bn">ট্যুরের নাম (বাংলা)</label><input id="tour-title-bn" required maxlength="120">
+            <label for="tour-title-en">Tour name (English)</label><input id="tour-title-en" required maxlength="120">
+            <label for="tour-location">লোকেশন / Location</label><input id="tour-location" required maxlength="120">
+            <label for="tour-date">যাত্রার তারিখ / Tour date</label><input id="tour-date" type="date" required>
+            <label for="tour-price">ফি (টাকা) / Fee (BDT)</label><input id="tour-price" type="number" min="0" step="1" required>
+            <label for="tour-seats">মোট সিট / Total seats</label><input id="tour-seats" type="number" min="1" step="1" required>
+            <label for="tour-desc-bn">বর্ণনা (বাংলা)</label><textarea id="tour-desc-bn" rows="2"></textarea>
+            <label for="tour-desc-en">Description (English)</label><textarea id="tour-desc-en" rows="2"></textarea>
+            <label class="checkbox-label"><input id="tour-published" type="checkbox" checked> ওয়েবসাইটে প্রকাশ করুন / Publish</label>
+            <div class="button-row"><button class="button button-primary" type="submit" data-i18n="saveTour">ট্যুর সেভ করুন</button><button class="button button-outline" type="button" id="reset-tour-form" data-i18n="clear">পরিষ্কার</button></div>
+            <p id="tour-form-message" class="form-message" role="status"></p>
+          </form>
+          <h3 data-i18n="existingTours">বর্তমান ট্যুর</h3><div id="admin-tour-list" class="admin-list"></div>
+        </section>
+      </div>
+    </div>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
