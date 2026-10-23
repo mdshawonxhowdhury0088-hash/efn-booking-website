@@ -377,12 +377,14 @@ async function loadAdminTours() {
         $("admin-tours-panel").scrollIntoView({ behavior: "smooth" });
       });
     });
-  } catch (error) {
-    console.error("Admin tours:", error);
-    container.innerHTML =
-      "<p>ট্যুর লোড হয়নি। tours টেবিলের অনুমতি পরীক্ষা করুন।</p>";
+    } catch (error) {
+    console.error("Save tour:", error);
+    message(
+      "tour-form-message",
+      "সেভ হয়নি: " + (error.message || JSON.stringify(error)),
+      true
+    );
   }
-}
 
 /* Add or edit a tour */
 $("tour-form")?.addEventListener("submit", async event => {
