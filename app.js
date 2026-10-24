@@ -184,13 +184,15 @@ $("booking-form")?.addEventListener("submit", async event => {
 
   try {
     const { error } = await db.from("bookings").insert([{
-  tour_id: currentTour.id,
-  customer_name: guest_name,
-  guest_phone,
-  guest_count,
-  trx_id: trx_id || null,
-  note: note || null,
-  status: "pending"
+  
+tour_id: currentTour.id,
+customer_name: guest_name,
+phone: guest_phone,
+guest_phone,
+guest_count,
+trx_id: trx_id || null,
+note: note || null,
+status: "pending"
 }]);
     if (error) throw error;
 
