@@ -188,7 +188,13 @@ $("booking-form")?.addEventListener("submit", async event => {
 
 
 tour_id: currentTour.id,
-tour_name: currentTour.title_bn || currentTour.title_en || currentTour.title,
+tour_name: String(
+  currentTour.title_bn ||
+  currentTour.title_en ||
+  currentTour.title ||
+  currentTour.name ||
+  ""
+).trim(),,
 customer_name: guest_name,
 phone: guest_phone,
 guest_phone,
