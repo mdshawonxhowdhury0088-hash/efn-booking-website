@@ -168,6 +168,19 @@ $("booking-form")?.addEventListener("submit", async event => {
   const trx_id = $("trx-id").value.trim();
   const note = $("booking-note").value.trim();
 
+  const tourName = String(
+    currentTour.title_bn ||
+    currentTour.title_en ||
+    currentTour.title ||
+    currentTour.name ||
+    ""
+  ).trim();
+
+  if (!tourName) {
+    message("booking-message", "ট্যুরের নাম পাওয়া যায়নি।", true);
+    return;
+  }
+
   if (
     !guest_name ||
     !guest_phone ||
@@ -184,25 +197,17 @@ $("booking-form")?.addEventListener("submit", async event => {
 
   try {
     const { error } = await db.from("bookings").insert([{
-  
+      tour_id: currentTour.id,
+      tour_name: tourName,
+      customer_name: guest_name,
+      phone: guest_phone,
+      guest_phone: guest_phone,
+      guest_count: guest_count,
+      trx_id: trx_id || null,
+      note: note || null,
+      status: "pending"
+    }]);
 
-
-tour_id: currentTour.id,
-tour_name: String(
-  currentTour.title_bn ||
-  currentTour.title_en ||
-  currentTour.title ||
-  currentTour.name ||
-  ""
-).trim(),,
-customer_name: guest_name,
-phone: guest_phone,
-guest_phone,
-guest_count,
-trx_id: trx_id || null,
-note: note || null,
-status: "pending"
-}]);
     if (error) throw error;
 
     message(
@@ -281,6 +286,8 @@ document.querySelectorAll("[data-tab]").forEach(button => {
 
     $("admin-bookings-panel").hidden = !showBookings;
     $("admin-tours-panel").hidden = showBookings;
+
+    if (showBookings) loadAdminBookings();
   });
 });
 
@@ -294,30 +301,35 @@ async function loadAdminBookings() {
   container.innerHTML = "<p>বুকিং লোড হচ্ছে...</p>";
 
   try {
-    let query = db.from("bookings")
-      .select("*, tours(title_bn, title_en, tour_date)")
+    const { data, error } = await db
+      .from("bookings")
+      .select("*")
       .order("created_at", { ascending: false });
-
-    if (currentFilter !== "all") {
-      query = query.eq("status", currentFilter);
-    }
-
-    const { data, error } = await query;
 
     if (error) throw error;
 
-    if (!data?.length) {
-      container.innerHTML = "<p>কোনো বুকিং পাওয়া যায়নি।</p>";
+    const allBookings = data || [];
+    const filteredBookings = currentFilter === "all"
+      ? allBookings
+      : allBookings.filter(b => b.status === currentFilter);
+
+    container.innerHTML = `
+      <div class="admin-card">
+        <h3>মোট বুকিং: ${allBookings.length}টি</h3>
+        <p>এই ফিল্টারে বুকিং: ${filteredBookings.length}টি</p>
+      </div>
+    `;
+
+    if (!filteredBookings.length) {
+      container.innerHTML += "<p>এই ফিল্টারে কোনো বুকিং পাওয়া যায়নি।</p>";
       return;
     }
 
-    container.innerHTML = data.map(b => `
+    container.innerHTML += filteredBookings.map(b => `
       <article class="admin-card">
-        <h3>${esc(b.guest_name)}</h3>
-        <p>ফোন: ${esc(b.guest_phone)}</p>
-        <p>ট্যুর: ${esc(
-          b.tours?.title_bn || b.tours?.title_en || "ট্যুর"
-        )}</p>
+        <h3>${esc(b.customer_name)}</h3>
+        <p>ফোন: ${esc(b.phone || b.guest_phone || "দেওয়া হয়নি")}</p>
+        <p>ট্যুর: ${esc(b.tour_name || "ট্যুর")}</p>
         <p>যাত্রী: ${esc(b.guest_count)}</p>
         <p>TrxID: ${esc(b.trx_id || "দেওয়া হয়নি")}</p>
         <p>নোট: ${esc(b.note || "নেই")}</p>
@@ -335,6 +347,7 @@ async function loadAdminBookings() {
 
     container.querySelectorAll("[data-booking-status]").forEach(button => {
       button.addEventListener("click", async () => {
+        button.disabled = true;
         await updateBookingStatus(
           button.dataset.bookingStatus,
           button.dataset.status
@@ -345,7 +358,7 @@ async function loadAdminBookings() {
     console.error("Admin bookings:", error);
 
     container.innerHTML =
-      "<p>বুকিং লোড হয়নি। Admin access ও bookings টেবিলের অনুমতি পরীক্ষা করুন।</p>";
+      `<p>বুকিং লোড হয়নি: ${esc(error.message || "অনুমতি পরীক্ষা করুন।")}</p>`;
   }
 }
 
@@ -365,6 +378,7 @@ async function updateBookingStatus(id, status) {
   } catch (error) {
     console.error("Update status:", error);
     notify("আপডেট হয়নি। Supabase অনুমতি পরীক্ষা করুন।");
+    await loadAdminBookings();
   }
 }
 
@@ -394,7 +408,7 @@ async function loadAdminTours() {
 
     container.innerHTML = (data || []).map(t => `
       <article class="admin-card">
-        <h3>${esc(t.title_bn || t.title_en)}</h3>
+        <h3>${esc(t.title_bn || t.title_en || "ট্যুর")}</h3>
         <p>${esc(t.location)} — ${dateText(t.tour_date)}</p>
         <p>${money(t.price)} | সিট: ${esc(t.seats)}</p>
         <p>${t.published ? "প্রকাশিত" : "প্রকাশিত নয়"}</p>
@@ -431,7 +445,7 @@ async function loadAdminTours() {
     console.error("Admin tours:", error);
 
     container.innerHTML =
-      "<p>ট্যুর লোড হয়নি। tours টেবিলের অনুমতি পরীক্ষা করুন।</p>";
+      `<p>ট্যুর লোড হয়নি: ${esc(error.message || "অনুমতি পরীক্ষা করুন।")}</p>`;
   }
 }
 
@@ -446,7 +460,6 @@ $("tour-form")?.addEventListener("submit", async event => {
 
   const form = $("tour-form");
   const button = form.querySelector('[type="submit"]');
-
   const id = $("edit-tour-id").value;
 
   const tour = {
