@@ -186,9 +186,12 @@ $("booking-form")?.addEventListener("submit", async event => {
     const { error } = await db.from("bookings").insert([{
   
 
+
 tour_id: currentTour.id,
+tour_name: currentTour.title_bn || currentTour.title_en || currentTour.title,
 customer_name: guest_name,
 phone: guest_phone,
+guest_phone,
 guest_count,
 trx_id: trx_id || null,
 note: note || null,
